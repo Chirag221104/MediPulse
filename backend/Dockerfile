@@ -28,8 +28,11 @@ RUN npm ci --only=production
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user for security
-RUN addgroup -S medipulse && adduser -S medipulse -G medipulse
+# Create non-root user and logs directory
+RUN addgroup -S medipulse && adduser -S medipulse -G medipulse \
+    && mkdir -p /app/logs \
+    && chown -R medipulse:medipulse /app
+
 USER medipulse
 
 # Expose port
