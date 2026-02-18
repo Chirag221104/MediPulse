@@ -17,7 +17,9 @@ export const useCreateMedicine = () => {
             name: string;
             type: string;
             dose: string;
+            unit: string;
             frequency: string;
+            intakeSlots: { slot: 'morning' | 'afternoon' | 'evening'; relation: 'before' | 'after' | 'with' | 'none' }[];
             stock: number;
             startDate: string;
             reminderTimes: string[];

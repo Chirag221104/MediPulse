@@ -68,7 +68,9 @@ export default function MedicinesScreen() {
                             <View style={styles.cardHeader}>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.medName}>{item.name}</Text>
-                                    <Text style={styles.medDetail}>{item.dose} • {item.type} • {item.frequency}</Text>
+                                    <Text style={styles.medDetail}>
+                                        {item.dose} {item.unit || item.type} • {item.intakeSlots?.map(s => s.slot.charAt(0).toUpperCase() + s.slot.slice(1)).join(', ') || item.frequency}
+                                    </Text>
                                 </View>
                                 <View style={[styles.stockBadge, item.stock <= LOW_STOCK_THRESHOLD && styles.lowStockBadge]}>
                                     <Text style={[styles.stockText, item.stock <= LOW_STOCK_THRESHOLD && styles.lowStockText]}>

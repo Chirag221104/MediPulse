@@ -13,13 +13,15 @@ export class AuthService {
     }
 
     async register(data: any) {
-        const existingUser = await this.userRepo.findByEmail(data.email);
+        const email = data.email.trim().toLowerCase();
+        const existingUser = await this.userRepo.findByEmail(email);
         if (existingUser) {
             throw new AppError('Email already exists', 409);
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 10);
-        const user = await this.userRepo.create({ ...data, passwordHash });
+        const password = data.password.trim();
+        const passwordHash = await bcrypt.hash(password, 10);
+        const user = await this.userRepo.create({ ...data, email, passwordHash });
 
         const { accessToken, refreshToken } = await this.generateTokens(user);
 
@@ -27,8 +29,22 @@ export class AuthService {
     }
 
     async login(data: any) {
-        const user = await this.userRepo.findByEmail(data.email);
-        if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
+        const email = data.email.trim().toLowerCase();
+        const password = data.password.trim();
+
+        console.log(`[DEBUG] Login attempt for email: "${email}"`);
+        const user = await this.userRepo.findByEmail(email);
+
+        if (!user) {
+            console.log(`[DEBUG] User not found for email: "${email}"`);
+            throw new AppError('Invalid email or password', 401);
+        }
+
+        console.log(`[DEBUG] User found. Comparing passwords...`);
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        console.log(`[DEBUG] Password match: ${isMatch}`);
+
+        if (!isMatch) {
             throw new AppError('Invalid email or password', 401);
         }
 

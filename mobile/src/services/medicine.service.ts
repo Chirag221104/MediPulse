@@ -1,12 +1,19 @@
 import api from './api';
 
+export interface IntakeSlot {
+    slot: 'morning' | 'afternoon' | 'evening';
+    relation: 'before' | 'after' | 'with' | 'none';
+}
+
 export interface Medicine {
     _id: string;
     patientId: string;
     name: string;
     type: string;
     dose: string;
+    unit: string;
     frequency: string;
+    intakeSlots: IntakeSlot[];
     stock: number;
     startDate: string;
     instructions?: string;
@@ -33,7 +40,9 @@ export const medicineService = {
         name: string;
         type: string;
         dose: string;
+        unit: string;
         frequency: string;
+        intakeSlots: IntakeSlot[];
         stock: number;
         startDate: string;
         reminderTimes: string[];
@@ -43,7 +52,7 @@ export const medicineService = {
         return data.data;
     },
 
-    update: async (id: string, payload: Partial<Medicine>): Promise<Medicine> => {
+    update: async (id: string, payload: Partial<Omit<Medicine, '_id' | 'patientId' | 'createdAt' | 'updatedAt'>>): Promise<Medicine> => {
         const { data } = await api.patch<{ success: boolean; data: Medicine }>(`/medicines/${id}`, payload);
         return data.data;
     },

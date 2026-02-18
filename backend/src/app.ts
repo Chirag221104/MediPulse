@@ -19,7 +19,9 @@ process.on('uncaughtException', (err) => {
 const app = express();
 
 // Security Middleware
-app.enable('trust proxy'); // Required for rate limiting behind proxies (Render/Railway)
+if (process.env.NODE_ENV === 'production') {
+    app.enable('trust proxy');
+}
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN }));
 
@@ -47,7 +49,11 @@ app.get('/health', (_req, res) => {
     res.status(status).json({
         status: dbStatus === 'UP' ? 'UP' : 'DOWN',
         timestamp: new Date(),
-        db: dbStatus
+        db: dbStatus,
+        details: {
+            connections: mongoose.connections.length,
+            readyState: mongoose.connection.readyState
+        }
     });
 });
 

@@ -9,6 +9,7 @@ const patientRepo = new PatientRepository();
 
 export const getAdherenceReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log('Backend: GET /adherence for patient', req.query.patientId);
         const { patientId, startDate, endDate } = req.query;
         // Basic presence validation is handled by route validator or service defaults
         const report = await reportService.getAdherenceReport(
@@ -17,8 +18,10 @@ export const getAdherenceReport = async (req: Request, res: Response, next: Next
             startDate as string,
             endDate as string
         );
+        console.log('Backend: Returning adherence report');
         res.status(200).json({ success: true, data: report });
     } catch (error) {
+        console.error('Backend Report Error:', error);
         next(error);
     }
 };

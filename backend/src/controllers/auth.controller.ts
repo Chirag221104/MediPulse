@@ -5,24 +5,30 @@ const authService = new AuthService();
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log('Registering user:', req.body.email);
         const result = await authService.register(req.body);
+        console.log('Registration success:', result.user.email);
         res.status(201).json({
             success: true,
             data: result,
         });
     } catch (error) {
+        console.error('Registration error:', error);
         next(error);
     }
 };
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log('Login attempt:', req.body.email);
         const result = await authService.login(req.body);
+        console.log('Login success:', result.user.email);
         res.status(200).json({
             success: true,
             data: result,
         });
     } catch (error) {
+        console.error('Login error:', error);
         next(error);
     }
 };

@@ -67,12 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const login = useCallback(async (email: string, password: string) => {
-        const result = await authService.login(email, password);
+        const result = await authService.login(email.trim().toLowerCase(), password.trim());
         await handleAuthSuccess(result);
     }, [handleAuthSuccess]);
 
     const register = useCallback(async (name: string, email: string, password: string) => {
-        const result = await authService.register(name, email, password);
+        const result = await authService.register(name.trim(), email.trim().toLowerCase(), password.trim());
         await handleAuthSuccess(result);
     }, [handleAuthSuccess]);
 

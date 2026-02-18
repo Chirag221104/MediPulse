@@ -20,9 +20,11 @@ export interface HealthSummaryItem {
 
 export const reportService = {
     getAdherence: async (patientId: string, startDate: string, endDate: string): Promise<AdherenceReport> => {
+        console.log('Fetching adherence for:', patientId);
         const { data } = await api.get<{ success: boolean; data: AdherenceReport }>('/reports/adherence', {
             params: { patientId, startDate, endDate },
         });
+        console.log('Adherence data received');
         return data.data;
     },
 
@@ -32,9 +34,11 @@ export const reportService = {
         endDate: string,
         type?: string
     ): Promise<HealthSummaryItem[]> => {
+        console.log('Fetching health summary for:', patientId);
         const { data } = await api.get<{ success: boolean; data: HealthSummaryItem[] }>('/reports/health-summary', {
             params: { patientId, startDate, endDate, ...(type ? { type } : {}) },
         });
+        console.log('Health summary data received');
         return data.data;
     },
 

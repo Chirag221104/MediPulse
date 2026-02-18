@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdherence, useHealthSummary } from '../../src/hooks/useReports';
@@ -10,11 +10,19 @@ export default function ReportsScreen() {
     const [downloading, setDownloading] = useState(false);
 
     // Default: last 30 days
-    const endDate = new Date().toISOString();
-    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { startDate, endDate } = useMemo(() => {
+        const end = new Date().toISOString();
+        const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        return { startDate: start, endDate: end };
+    }, []);
 
     const { data: adherence, isLoading: adherenceLoading, isError: adherenceError, refetch: refetchAdherence } = useAdherence(activePatientId, startDate, endDate);
     const { data: healthSummary, isLoading: summaryLoading, isError: summaryError, refetch: refetchSummary } = useHealthSummary(activePatientId, startDate, endDate);
+
+    console.log('ReportsScreen: activePatientId =', activePatientId);
+    console.log('ReportsScreen: adherenceLoading =', adherenceLoading, 'summaryLoading =', summaryLoading);
+    if (adherenceError) console.log('ReportsScreen: adherenceError =', adherenceError);
+    if (summaryError) console.log('ReportsScreen: summaryError =', summaryError);
 
     const handleDownloadPdf = async () => {
         if (!activePatientId) return;
