@@ -1,0 +1,80 @@
+
+> backend@1.0.0 test
+> jest tests/healthlog.test.ts
+
+  console.log
+    [dotenv@17.3.1] injecting env (5) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    Patient Res: {
+      success: true,
+      data: {
+        userId: '69957d9aadf0fb8abf687bce',
+        name: 'Health Patient',
+        age: 65,
+        gender: 'male',
+        relation: 'Father',
+        _id: '69957d9aadf0fb8abf687bd1',
+        createdAt: '2026-02-18T08:51:38.512Z',
+        updatedAt: '2026-02-18T08:51:38.512Z',
+        __v: 0
+      }
+    }
+
+      at tests/healthlog.test.ts:50:13
+
+2026-02-18 14:21:38:2138 [ab550163-ef66-411c-b915-d22bb78ec581] [31merror[39m: [31mINTERNAL_SERVER_ERROR: Internal Server Error[39m
+2026-02-18 14:21:38:2138 [a15baa87-9210-45b5-b6c9-4ae39aed7a75] [31merror[39m: [31mINTERNAL_SERVER_ERROR: Internal Server Error[39m
+2026-02-18 14:21:38:2138 [325738aa-554e-49a9-9d2c-89d376142727] [31merror[39m: [31mAPP_ERROR: Unauthorized access to patient[39m
+2026-02-18 14:21:38:2138 [e8f1aea6-d16a-413d-84e9-6cd6b93a21a2] [31merror[39m: [31mVALIDATION_ERROR: Validation Error[39m
+FAIL tests/healthlog.test.ts
+  Health Log Routes
+    √ should create a health log (10 ms)
+    × should get health logs filtered by type (20 ms)
+    × should filter by date range (5 ms)
+    √ should prevent unauthorized access to other users patients (61 ms)
+    √ should validate input types (6 ms)
+
+  ● Health Log Routes › should get health logs filtered by type
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+    [0m [90m  95 |[39m             [33m.[39m[36mset[39m([32m'Authorization'[39m[33m,[39m [32m`Bearer ${accessToken}`[39m)[33m;[39m
+     [90m  96 |[39m
+    [31m[1m>[22m[39m[90m  97 |[39m         expect(res[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m  98 |[39m         expect(res[33m.[39mbody[33m.[39mdata[33m.[39mlength)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m  99 |[39m         expect(res[33m.[39mbody[33m.[39mdata[[35m0[39m][33m.[39mtype)[33m.[39mtoBe([32m'blood_pressure'[39m)[33m;[39m
+     [90m 100 |[39m     })[33m;[39m[0m
+
+      at tests/healthlog.test.ts:97:28
+      at fulfilled (tests/healthlog.test.ts:5:58)
+
+  ● Health Log Routes › should filter by date range
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+    [0m [90m 110 |[39m             [33m.[39m[36mset[39m([32m'Authorization'[39m[33m,[39m [32m`Bearer ${accessToken}`[39m)[33m;[39m
+     [90m 111 |[39m
+    [31m[1m>[22m[39m[90m 112 |[39m         expect(res[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m 113 |[39m         expect(res[33m.[39mbody[33m.[39mdata[33m.[39mlength)[33m.[39mtoBeGreaterThanOrEqual([35m2[39m)[33m;[39m
+     [90m 114 |[39m     })[33m;[39m
+     [90m 115 |[39m[0m
+
+      at tests/healthlog.test.ts:112:28
+      at fulfilled (tests/healthlog.test.ts:5:58)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 3 passed, 5 total
+Snapshots:   0 total
+Time:        2.418 s, estimated 3 s
+Ran all test suites matching tests/healthlog.test.ts.

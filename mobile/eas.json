@@ -1,0 +1,25 @@
+{
+    "cli": {
+        "version": ">= 3.10.0"
+    },
+    "build": {
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal"
+        },
+        "preview": {
+            "distribution": "internal",
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://medipulse-staging.up.railway.app/api/v1"
+            }
+        },
+        "production": {
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://medipulse-production.up.railway.app/api/v1"
+            }
+        }
+    },
+    "submit": {
+        "production": {}
+    }
+}

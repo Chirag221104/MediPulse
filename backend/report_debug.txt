@@ -1,0 +1,148 @@
+
+> backend@1.0.0 test
+> jest tests/report.test.ts
+
+  console.log
+    [dotenv@17.3.1] injecting env (5) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+2026-02-18 14:33:39:3339 [b3638252-883e-4a81-8896-6148747dc0e0] [31merror[39m: [31mVALIDATION_ERROR: Validation Error[39m
+  console.error
+    Medicine Creation Error: {
+      "success": false,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "Validation Error",
+        "details": [
+          {
+            "code": "invalid_value",
+            "values": [
+              "Tablet",
+              "Syrup",
+              "Injection",
+              "Drops",
+              "Cream",
+              "Inhaler"
+            ],
+            "path": [
+              "body",
+              "type"
+            ],
+            "message": "Invalid option: expected one of \"Tablet\"|\"Syrup\"|\"Injection\"|\"Drops\"|\"Cream\"|\"Inhaler\""
+          },
+          {
+            "expected": "string",
+            "code": "invalid_type",
+            "path": [
+              "body",
+              "dose"
+            ],
+            "message": "Invalid input: expected string, received undefined"
+          },
+          {
+            "code": "invalid_union",
+            "errors": [
+              [
+                {
+                  "expected": "string",
+                  "code": "invalid_type",
+                  "path": [],
+                  "message": "Invalid input: expected string, received undefined"
+                }
+              ],
+              [
+                {
+                  "expected": "string",
+                  "code": "invalid_type",
+                  "path": [],
+                  "message": "Invalid input: expected string, received undefined"
+                }
+              ]
+            ],
+            "path": [
+              "body",
+              "startDate"
+            ],
+            "message": "Invalid input"
+          },
+          {
+            "expected": "array",
+            "code": "invalid_type",
+            "path": [
+              "body",
+              "reminderTimes"
+            ],
+            "message": "Invalid input: expected array, received undefined"
+          }
+        ]
+      }
+    }
+
+    [0m [90m 70 |[39m         })[33m;[39m
+     [90m 71 |[39m     [36mif[39m (medRes[33m.[39mstatus [33m!==[39m [35m201[39m) {
+    [31m[1m>[22m[39m[90m 72 |[39m         console[33m.[39merror([32m'Medicine Creation Error:'[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(medRes[33m.[39mbody[33m,[39m [36mnull[39m[33m,[39m [35m2[39m))[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 73 |[39m     }
+     [90m 74 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m 75 |[39m })[33m;[39m[0m
+
+      at tests/report.test.ts:72:17
+      at fulfilled (tests/report.test.ts:5:58)
+
+FAIL tests/report.test.ts
+  Report Routes
+    × should calculate adherence correctly (1 ms)
+    × should calculate health summary correctly
+    × should prevent unauthorized access to reports
+
+  ● Report Routes › should calculate adherence correctly
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 72 |[39m         console[33m.[39merror([32m'Medicine Creation Error:'[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(medRes[33m.[39mbody[33m,[39m [36mnull[39m[33m,[39m [35m2[39m))[33m;[39m
+     [90m 73 |[39m     }
+    [31m[1m>[22m[39m[90m 74 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 75 |[39m })[33m;[39m
+     [90m 76 |[39m
+     [90m 77 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:74:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+  ● Report Routes › should calculate health summary correctly
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 72 |[39m         console[33m.[39merror([32m'Medicine Creation Error:'[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(medRes[33m.[39mbody[33m,[39m [36mnull[39m[33m,[39m [35m2[39m))[33m;[39m
+     [90m 73 |[39m     }
+    [31m[1m>[22m[39m[90m 74 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 75 |[39m })[33m;[39m
+     [90m 76 |[39m
+     [90m 77 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:74:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+  ● Report Routes › should prevent unauthorized access to reports
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 72 |[39m         console[33m.[39merror([32m'Medicine Creation Error:'[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(medRes[33m.[39mbody[33m,[39m [36mnull[39m[33m,[39m [35m2[39m))[33m;[39m
+     [90m 73 |[39m     }
+    [31m[1m>[22m[39m[90m 74 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 75 |[39m })[33m;[39m
+     [90m 76 |[39m
+     [90m 77 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:74:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 total
+Snapshots:   0 total
+Time:        3.001 s
+Ran all test suites matching tests/report.test.ts.

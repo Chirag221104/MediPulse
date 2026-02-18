@@ -1,0 +1,104 @@
+
+> backend@1.0.0 test
+> jest tests/healthlog.test.ts
+
+  console.log
+    [dotenv@17.3.1] injecting env (5) from .env -- tip: ⚙️  override existing env vars with { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+FAIL tests/healthlog.test.ts
+  ● Test suite failed to run
+
+    [96msrc/services/healthlog.service.ts[0m:[93m41[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'find' does not exist on type 'HealthLogRepository'.
+
+    [7m41[0m         return await this.healthLogRepo.find(filter);
+    [7m  [0m [91m                                        ~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m44[0m:[93m32[0m - [91merror[0m[90m TS2729: [0mProperty 'patientRepo' is used before its initialization.
+
+    [7m44[0m     const patient = await this.patientRepo.findById(filter.patientId);
+    [7m  [0m [91m                               ~~~~~~~~~~~[0m
+
+      [96msrc/services/healthlog.service.ts[0m:[93m8[0m:[93m13[0m
+        [7m8[0m     private patientRepo: PatientRepository;
+        [7m [0m [96m            ~~~~~~~~~~~[0m
+        'patientRepo' is declared here.
+    [96msrc/services/healthlog.service.ts[0m:[93m44[0m:[93m53[0m - [91merror[0m[90m TS2552: [0mCannot find name 'filter'. Did you mean 'File'?
+
+    [7m44[0m     const patient = await this.patientRepo.findById(filter.patientId);
+    [7m  [0m [91m                                                    ~~~~~~[0m
+
+      [96mnode_modules/typescript/lib/lib.dom.d.ts[0m:[93m11629[0m:[93m13[0m
+        [7m11629[0m declare var File: {
+        [7m     [0m [96m            ~~~~[0m
+        'File' is declared here.
+    [96msrc/services/healthlog.service.ts[0m:[93m45[0m:[93m8[0m - [91merror[0m[90m TS7006: [0mParameter '(Missing)' implicitly has an 'any' type.
+
+    [7m45[0m     if(!patient) {
+    [7m  [0m [91m       [0m
+    [96msrc/services/healthlog.service.ts[0m:[93m45[0m:[93m9[0m - [91merror[0m[90m TS7006: [0mParameter 'patient' implicitly has an 'any' type.
+
+    [7m45[0m     if(!patient) {
+    [7m  [0m [91m        ~~~~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m5[0m - [91merror[0m[90m TS7010: [0m'if', which lacks return-type annotation, implicitly has an 'any' return type.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m    ~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m8[0m - [91merror[0m[90m TS7006: [0mParameter 'patient' implicitly has an 'any' type.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m       ~~~~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m16[0m - [91merror[0m[90m TS7006: [0mParameter 'userId' implicitly has an 'any' type.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m               ~~~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'toString' implicitly has an 'any' type.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                      ~~~~~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m38[0m - [91merror[0m[90m TS2304: [0mCannot find name 'userId'.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                                     ~~~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m53[0m:[93m14[0m - [91merror[0m[90m TS2532: [0mObject is possibly 'undefined'.
+
+    [7m53[0m return await this.healthLogRepo.findAll(filter);
+    [7m  [0m [91m             ~~~~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m45[0m:[93m8[0m - [91merror[0m[90m TS1003: [0mIdentifier expected.
+
+    [7m45[0m     if(!patient) {
+    [7m  [0m [91m       ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m15[0m - [91merror[0m[90m TS1005: [0m',' expected.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m              ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m22[0m - [91merror[0m[90m TS1005: [0m',' expected.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                     ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m31[0m - [91merror[0m[90m TS1005: [0m',' expected.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                              ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m32[0m - [91merror[0m[90m TS1109: [0mExpression expected.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                               ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m48[0m:[93m44[0m - [91merror[0m[90m TS1005: [0m';' expected.
+
+    [7m48[0m     if(patient.userId.toString() !== userId) {
+    [7m  [0m [91m                                           ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m54[0m:[93m5[0m - [91merror[0m[90m TS1128: [0mDeclaration or statement expected.
+
+    [7m54[0m     }
+    [7m  [0m [91m    ~[0m
+    [96msrc/services/healthlog.service.ts[0m:[93m55[0m:[93m1[0m - [91merror[0m[90m TS1128: [0mDeclaration or statement expected.
+
+    [7m55[0m }
+    [7m  [0m [91m~[0m
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        2.918 s, estimated 3 s
+Ran all test suites matching tests/healthlog.test.ts.

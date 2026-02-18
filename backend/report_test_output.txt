@@ -1,0 +1,66 @@
+
+> backend@1.0.0 test
+> jest tests/report.test.ts
+
+  console.log
+    [dotenv@17.3.1] injecting env (5) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+2026-02-18 14:33:21:3321 [7b873940-68b4-49c4-994f-629789d1d2d5] [31merror[39m: [31mVALIDATION_ERROR: Validation Error[39m
+FAIL tests/report.test.ts
+  Report Routes
+    × should calculate adherence correctly (1 ms)
+    × should calculate health summary correctly
+    × should prevent unauthorized access to reports (1 ms)
+
+  ● Report Routes › should calculate adherence correctly
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 69 |[39m             stock[33m:[39m [35m30[39m[33m,[39m
+     [90m 70 |[39m         })[33m;[39m
+    [31m[1m>[22m[39m[90m 71 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 72 |[39m })[33m;[39m
+     [90m 73 |[39m
+     [90m 74 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:71:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+  ● Report Routes › should calculate health summary correctly
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 69 |[39m             stock[33m:[39m [35m30[39m[33m,[39m
+     [90m 70 |[39m         })[33m;[39m
+    [31m[1m>[22m[39m[90m 71 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 72 |[39m })[33m;[39m
+     [90m 73 |[39m
+     [90m 74 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:71:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+  ● Report Routes › should prevent unauthorized access to reports
+
+    TypeError: Cannot read properties of undefined (reading '_id')
+
+    [0m [90m 69 |[39m             stock[33m:[39m [35m30[39m[33m,[39m
+     [90m 70 |[39m         })[33m;[39m
+    [31m[1m>[22m[39m[90m 71 |[39m     medicineId [33m=[39m medRes[33m.[39mbody[33m.[39mdata[33m.[39m_id[33m;[39m
+     [90m    |[39m                                   [31m[1m^[22m[39m
+     [90m 72 |[39m })[33m;[39m
+     [90m 73 |[39m
+     [90m 74 |[39m afterAll([36masync[39m () [33m=>[39m {[0m
+
+      at tests/report.test.ts:71:35
+      at fulfilled (tests/report.test.ts:5:58)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 total
+Snapshots:   0 total
+Time:        2.431 s, estimated 5 s
+Ran all test suites matching tests/report.test.ts.

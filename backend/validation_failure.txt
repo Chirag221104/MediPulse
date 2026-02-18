@@ -1,0 +1,95 @@
+
+> backend@1.0.0 test
+> jest -t should create a health log tests/healthlog.test.ts
+
+  console.log
+    [dotenv@17.3.1] injecting env (5) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    Patient Res: {
+      success: true,
+      data: {
+        userId: '699579f2962fced6f6be1c90',
+        name: 'Health Patient',
+        age: 65,
+        gender: 'male',
+        relation: 'Father',
+        _id: '699579f2962fced6f6be1c93',
+        createdAt: '2026-02-18T08:36:02.300Z',
+        updatedAt: '2026-02-18T08:36:02.300Z',
+        __v: 0
+      }
+    }
+
+      at tests/healthlog.test.ts:50:13
+
+  console.log
+    HealthLogService: createLog called {
+      userId: '699579f2962fced6f6be1c90',
+      data: {
+        patientId: '699579f2962fced6f6be1c93',
+        type: 'blood_pressure',
+        value: 120,
+        unit: 'mmHg',
+        notes: 'Morning reading'
+      }
+    }
+
+      at HealthLogService.<anonymous> (src/services/healthlog.service.ts:16:17)
+
+  console.log
+    HealthLogService: patient found new ObjectId('699579f2962fced6f6be1c93')
+
+      at HealthLogService.<anonymous> (src/services/healthlog.service.ts:19:17)
+
+  console.log
+    HealthLogService: Calling repo.create
+
+      at HealthLogService.<anonymous> (src/services/healthlog.service.ts:29:17)
+
+2026-02-18 14:06:02:62 [6a46d289-e01d-40cd-a8dd-77c2e5d1abd9] [31merror[39m: [31mINTERNAL_SERVER_ERROR: Internal Server Error[39m
+  console.log
+    Create Log Error: {
+      "success": false,
+      "error": {
+        "code": "INTERNAL_SERVER_ERROR",
+        "message": "Internal Server Error",
+        "details": null
+      }
+    }
+
+      at tests/healthlog.test.ts:73:21
+
+FAIL tests/healthlog.test.ts
+  Health Log Routes
+    × should create a health log (24 ms)
+    ○ skipped should get health logs filtered by type
+    ○ skipped should filter by date range
+    ○ skipped should prevent unauthorized access to other users patients
+    ○ skipped should validate input types
+
+  ● Health Log Routes › should create a health log
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 500
+
+    [0m [90m 73 |[39m             console[33m.[39mlog([32m'Create Log Error:'[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(res[33m.[39mbody[33m,[39m [36mnull[39m[33m,[39m [35m2[39m))[33m;[39m
+     [90m 74 |[39m         }
+    [31m[1m>[22m[39m[90m 75 |[39m         expect(res[33m.[39mstatus)[33m.[39mtoBe([35m201[39m)[33m;[39m
+     [90m    |[39m                            [31m[1m^[22m[39m
+     [90m 76 |[39m         expect(res[33m.[39mbody[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 77 |[39m         expect(res[33m.[39mbody[33m.[39mdata[33m.[39mtype)[33m.[39mtoBe([32m'blood_pressure'[39m)[33m;[39m
+     [90m 78 |[39m         expect(res[33m.[39mbody[33m.[39mdata[33m.[39mvalue)[33m.[39mtoBe([35m120[39m)[33m;[39m[0m
+
+      at tests/healthlog.test.ts:75:28
+      at fulfilled (tests/healthlog.test.ts:5:58)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 4 skipped, 5 total
+Snapshots:   0 total
+Time:        3.326 s, estimated 4 s
+Ran all test suites matching tests/healthlog.test.ts with tests matching "should create a health log".
