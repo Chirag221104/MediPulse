@@ -20,7 +20,7 @@ const app = express();
 
 // Security Middleware
 if (process.env.NODE_ENV === 'production') {
-    app.enable('trust proxy');
+    app.set('trust proxy', 1); // Trust first hop (Render/Railway load balancer)
 }
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN }));
@@ -29,6 +29,8 @@ app.use(cors({ origin: env.CORS_ORIGIN }));
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use(limiter);
 
