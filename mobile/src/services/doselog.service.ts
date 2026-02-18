@@ -5,7 +5,8 @@ export interface DoseLog {
     medicineId: string;
     patientId: string;
     status: 'taken' | 'skipped' | 'missed';
-    scheduledTime: string;
+    slot: 'morning' | 'afternoon' | 'evening';
+    scheduledFor: string; // ISO Date (normalized on backend)
     takenAt?: string;
     newStock?: number;
 }
@@ -15,7 +16,8 @@ export const doseLogService = {
         medicineId: string;
         patientId: string;
         status: 'taken' | 'skipped' | 'missed';
-        scheduledTime: string;
+        slot: 'morning' | 'afternoon' | 'evening';
+        scheduledFor: string;
         takenAt?: string;
     }): Promise<DoseLog> => {
         const { data } = await api.post<{ success: boolean; data: DoseLog }>('/logs/dose', payload);

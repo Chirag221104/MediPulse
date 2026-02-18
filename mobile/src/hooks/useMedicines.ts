@@ -16,14 +16,12 @@ export const useCreateMedicine = () => {
             patientId: string;
             name: string;
             type: string;
-            dose: string;
-            unit: string;
-            frequency: string;
-            intakeSlots: { slot: 'morning' | 'afternoon' | 'evening'; relation: 'before' | 'after' | 'with' | 'none' }[];
+            dose: Medicine['dose'];
+            schedule: Medicine['schedule'];
             stock: number;
+            lowStockThreshold?: number;
             startDate: string;
-            reminderTimes: string[];
-            instructions?: string;
+            endDate?: string;
         }) => medicineService.create(payload),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['medicines', variables.patientId] });

@@ -4,7 +4,8 @@ export interface IDoseLog extends Document {
     medicineId: Types.ObjectId;
     patientId: Types.ObjectId;
     status: 'taken' | 'skipped' | 'missed';
-    scheduledTime: Date;
+    slot: 'morning' | 'afternoon' | 'evening';
+    scheduledFor: Date; // Normalized to 00:00:00
     takenAt?: Date;
     notes?: string;
     createdAt: Date;
@@ -20,17 +21,22 @@ const doseLogSchema = new Schema<IDoseLog>(
             enum: ['taken', 'skipped', 'missed'],
             required: true,
         },
-        scheduledTime: { type: Date, required: true },
+        slot: {
+            type: String,
+            enum: ['morning', 'afternoon', 'evening'],
+            required: true,
+        },
+        scheduledFor: { type: Date, required: true },
         takenAt: { type: Date },
         notes: { type: String },
     },
     { timestamps: true }
 );
 
-// Idempotency: Prevent duplicate logs for the same scheduled dose
-doseLogSchema.index({ medicineId: 1, scheduledTime: 1 }, { unique: true });
+// Idempotency: Prevent duplicate logs for the same scheduled dose (medicine + slot + date)
+doseLogSchema.index({ medicineId: 1, slot: 1, scheduledFor: 1 }, { unique: true });
 
 // efficient queries
-doseLogSchema.index({ patientId: 1, scheduledTime: -1 });
+doseLogSchema.index({ patientId: 1, scheduledFor: -1 });
 
 export const DoseLog = mongoose.model<IDoseLog>('DoseLog', doseLogSchema);

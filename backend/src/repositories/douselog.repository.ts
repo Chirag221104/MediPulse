@@ -10,12 +10,12 @@ export class DoseLogRepository {
         const query: any = { patientId };
 
         if (startDate || endDate) {
-            query.scheduledTime = {};
-            if (startDate) query.scheduledTime.$gte = startDate;
-            if (endDate) query.scheduledTime.$lte = endDate;
+            query.scheduledFor = {};
+            if (startDate) query.scheduledFor.$gte = startDate;
+            if (endDate) query.scheduledFor.$lte = endDate;
         }
 
-        return await DoseLog.find(query).sort({ scheduledTime: -1 });
+        return await DoseLog.find(query).sort({ scheduledFor: -1 });
     }
 
     async findById(id: string): Promise<IDoseLog | null> {

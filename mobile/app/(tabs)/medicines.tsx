@@ -15,12 +15,13 @@ export default function MedicinesScreen() {
     const { data: medicines, isLoading, isError, refetch } = useMedicines(activePatientId);
     const logDose = useLogDose();
 
-    const handleMarkDose = (med: Medicine, status: 'taken' | 'skipped') => {
+    const handleMarkDose = (med: Medicine, status: 'taken' | 'skipped', slot: 'morning' | 'afternoon' | 'evening') => {
         logDose.mutate({
             medicineId: med._id,
             patientId: med.patientId,
             status,
-            scheduledTime: new Date().toISOString(),
+            slot,
+            scheduledFor: new Date().toISOString(),
             ...(status === 'taken' ? { takenAt: new Date().toISOString() } : {}),
         });
     };
@@ -69,7 +70,8 @@ export default function MedicinesScreen() {
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.medName}>{item.name}</Text>
                                     <Text style={styles.medDetail}>
-                                        {item.dose} {item.unit || item.type} • {item.intakeSlots?.map(s => s.slot.charAt(0).toUpperCase() + s.slot.slice(1)).join(', ') || item.frequency}
+                                        {item.dose.strength ? `${item.dose.strength} • ` : ''}
+                                        {item.dose.quantityPerDose} {item.dose.unit}
                                     </Text>
                                 </View>
                                 <View style={[styles.stockBadge, item.stock <= LOW_STOCK_THRESHOLD && styles.lowStockBadge]}>
@@ -86,23 +88,31 @@ export default function MedicinesScreen() {
                                 </View>
                             )}
 
-                            <View style={styles.actionRow}>
-                                <TouchableOpacity
-                                    style={[styles.actionBtn, styles.takenBtn]}
-                                    onPress={() => handleMarkDose(item, 'taken')}
-                                    disabled={logDose.isPending}
-                                >
-                                    <Ionicons name="checkmark" size={18} color="#fff" />
-                                    <Text style={styles.actionBtnText}> Taken</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.actionBtn, styles.skipBtn]}
-                                    onPress={() => handleMarkDose(item, 'skipped')}
-                                    disabled={logDose.isPending}
-                                >
-                                    <Ionicons name="close" size={18} color="#6B7280" />
-                                    <Text style={[styles.actionBtnText, { color: '#6B7280' }]}> Skip</Text>
-                                </TouchableOpacity>
+                            <View style={styles.slotsRow}>
+                                {item.schedule.slots.map((slot) => (
+                                    <View key={slot.timeOfDay} style={styles.slotActionCard}>
+                                        <Text style={styles.slotLabel}>
+                                            {slot.timeOfDay.charAt(0).toUpperCase() + slot.timeOfDay.slice(1)}
+                                            {slot.quantity ? ` (${slot.quantity})` : ''}
+                                        </Text>
+                                        <View style={styles.slotActions}>
+                                            <TouchableOpacity
+                                                style={[styles.miniActionBtn, styles.miniTakenBtn]}
+                                                onPress={() => handleMarkDose(item, 'taken', slot.timeOfDay)}
+                                                disabled={logDose.isPending}
+                                            >
+                                                <Ionicons name="checkmark" size={14} color="#fff" />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.miniActionBtn, styles.miniSkipBtn]}
+                                                onPress={() => handleMarkDose(item, 'skipped', slot.timeOfDay)}
+                                                disabled={logDose.isPending}
+                                            >
+                                                <Ionicons name="close" size={14} color="#6B7280" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                ))}
                             </View>
                         </View>
                     )}
@@ -132,19 +142,24 @@ const styles = StyleSheet.create({
     lowStockText: { color: '#D97706' },
     warningRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 4 },
     warningText: { fontSize: 12, color: '#D97706' },
-    actionRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-    actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-    takenBtn: { backgroundColor: '#10B981' },
-    skipBtn: { backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
-    actionBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-    emptyText: { fontSize: 18, fontWeight: '600', color: '#6B7280', marginTop: 12 },
-    emptySubtext: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
-    errorText: { fontSize: 16, color: '#EF4444', marginBottom: 12 },
-    retryButton: { backgroundColor: '#4F46E5', paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
-    retryText: { color: '#fff', fontWeight: '600' },
+    slotsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+    slotActionCard: {
+        backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8,
+        borderWidth: 1, borderColor: '#F3F4F6', flex: 1, minWidth: '30%',
+    },
+    slotLabel: { fontSize: 11, fontWeight: '700', color: '#4B5563', marginBottom: 4 },
+    slotActions: { flexDirection: 'row', gap: 6 },
+    miniActionBtn: { padding: 4, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+    miniTakenBtn: { backgroundColor: '#10B981' },
+    miniSkipBtn: { backgroundColor: '#E5E7EB' },
     fab: {
         position: 'absolute', bottom: 20, right: 20, width: 56, height: 56, borderRadius: 28,
         backgroundColor: '#4F46E5', justifyContent: 'center', alignItems: 'center', elevation: 4,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
     },
+    emptyText: { fontSize: 18, fontWeight: '600', color: '#6B7280', marginTop: 12 },
+    emptySubtext: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
+    errorText: { fontSize: 16, color: '#EF4444', marginBottom: 12 },
+    retryButton: { backgroundColor: '#4F46E5', paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
+    retryText: { color: '#fff', fontWeight: '600' },
 });

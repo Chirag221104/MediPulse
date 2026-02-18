@@ -8,7 +8,8 @@ export const useLogDose = () => {
             medicineId: string;
             patientId: string;
             status: 'taken' | 'skipped' | 'missed';
-            scheduledTime: string;
+            slot: 'morning' | 'afternoon' | 'evening';
+            scheduledFor: string;
             takenAt?: string;
         }) => doseLogService.log(payload),
         onSuccess: (_data, variables) => {

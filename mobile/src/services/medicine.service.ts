@@ -1,28 +1,36 @@
 import api from './api';
 
-export interface IntakeSlot {
-    slot: 'morning' | 'afternoon' | 'evening';
-    relation: 'before' | 'after' | 'with' | 'none';
+export interface ScheduleSlot {
+    timeOfDay: 'morning' | 'afternoon' | 'evening';
+    mealRelation?: 'before_breakfast' | 'after_breakfast' | 'before_lunch' | 'after_lunch' | 'before_dinner' | 'after_dinner';
+    quantity?: number;
+    reminderTime?: string;
 }
 
 export interface Medicine {
     _id: string;
     patientId: string;
     name: string;
-    type: string;
-    dose: string;
-    unit: string;
-    frequency: string;
-    intakeSlots: IntakeSlot[];
+    type: 'Tablet' | 'Syrup' | 'Injection' | 'Drops' | 'Cream' | 'Inhaler';
+    dose: {
+        strength?: string;
+        quantityPerDose: number;
+        unit: string;
+    };
+    schedule: {
+        slots: ScheduleSlot[];
+    };
     stock: number;
+    lowStockThreshold: number;
     startDate: string;
-    instructions?: string;
-    reminderTimes: string[];
+    endDate?: string;
+    isActive: boolean;
     createdAt: string;
     updatedAt: string;
 }
 
 export const medicineService = {
+    // ... rest of the service methods remain the same but types are updated by the interface change
     getByPatient: async (patientId: string): Promise<Medicine[]> => {
         const { data } = await api.get<{ success: boolean; data: Medicine[] }>('/medicines', {
             params: { patientId },
@@ -39,14 +47,12 @@ export const medicineService = {
         patientId: string;
         name: string;
         type: string;
-        dose: string;
-        unit: string;
-        frequency: string;
-        intakeSlots: IntakeSlot[];
+        dose: Medicine['dose'];
+        schedule: Medicine['schedule'];
         stock: number;
+        lowStockThreshold?: number;
         startDate: string;
-        reminderTimes: string[];
-        instructions?: string;
+        endDate?: string;
     }): Promise<Medicine> => {
         const { data } = await api.post<{ success: boolean; data: Medicine }>('/medicines', payload);
         return data.data;

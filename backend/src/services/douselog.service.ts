@@ -36,27 +36,34 @@ export class DoseLogService {
     }
 
     async logDose(userId: string, data: Partial<IDoseLog>) {
-        if (!data.medicineId || !data.status || !data.scheduledTime) {
-            throw new AppError('Missing required fields', 400);
+        if (!data.medicineId || !data.status || !data.slot || !data.scheduledFor) {
+            throw new AppError('Missing required fields (medicineId, status, slot, scheduledFor)', 400);
         }
 
         const { medicine } = await this.verifyOwnership(userId, data.medicineId.toString());
 
+        // Normalize Date to 00:00:00 for idempotency
+        const scheduledFor = new Date(data.scheduledFor);
+        scheduledFor.setHours(0, 0, 0, 0);
+
+        // Calculate Stock Decrement based on slot override or global dose
+        const slotConfig = medicine.schedule.slots.find(s => s.timeOfDay === data.slot);
+        const decrement = slotConfig?.quantity !== undefined ? slotConfig.quantity : medicine.dose.quantityPerDose;
+
         let lowStock = false;
 
         // Atomic Stock Decrement if taken
-        if (data.status === 'taken') {
+        if (data.status === 'taken' && decrement > 0) {
             const updatedMedicine = await Medicine.findOneAndUpdate(
-                { _id: data.medicineId, stock: { $gt: 0 } },
-                { $inc: { stock: -1 } },
+                { _id: data.medicineId, stock: { $gte: decrement } },
+                { $inc: { stock: -decrement } },
                 { returnDocument: 'after' }
             );
 
             if (!updatedMedicine) {
-                // Check if it was because of empty stock or invalid ID
                 const currentMed = await this.medicineRepo.findById(data.medicineId.toString());
-                if (currentMed && currentMed.stock === 0) {
-                    throw new AppError('Cannot take dose: Stock is empty', 409); // Conflict
+                if (currentMed && currentMed.stock < decrement) {
+                    throw new AppError(`Insufficient stock. Need ${decrement}, have ${currentMed.stock}`, 409);
                 }
                 throw new AppError('Medicine update failed', 500);
             }
@@ -64,7 +71,6 @@ export class DoseLogService {
             // Check Low Stock Threshold
             if (updatedMedicine.stock <= updatedMedicine.lowStockThreshold) {
                 lowStock = true;
-                // Trigger Alert (Async, don't block response)
                 import('../utils/alert').then(({ triggerLowStockAlert }) => {
                     triggerLowStockAlert(updatedMedicine);
                 });
@@ -74,23 +80,18 @@ export class DoseLogService {
         try {
             const log = await this.doseLogRepo.create({
                 ...data,
-                patientId: medicine.patientId, // Ensure patientId comes from trusted source (medicine), not body
+                scheduledFor, // Use normalized date
+                patientId: medicine.patientId,
             });
             return { log, lowStock };
         } catch (error: any) {
-            // Idempotency check: Duplicate key error
-            // If duplicate key error (Idempotency)
-            if (error.code === 11000) {
-                // Revert stock if it was taken
-                if (data.status === 'taken') {
-                    await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { stock: 1 } });
-                }
-                throw new AppError('Dose already logged for this scheduled time', 409);
+            // Idempotency: Revert stock if taken
+            if (data.status === 'taken' && decrement > 0) {
+                await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { stock: decrement } });
             }
 
-            // For any other error, revert stock
-            if (data.status === 'taken') {
-                await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { stock: 1 } });
+            if (error.code === 11000) {
+                throw new AppError(`Dose already logged for ${data.slot} on ${scheduledFor.toDateString()}`, 409);
             }
             throw error;
         }
