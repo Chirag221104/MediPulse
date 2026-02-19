@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,31 +12,43 @@ export default function RegisterScreen() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const router = useRouter();
 
     const handleRegister = async () => {
+        setError('');
         if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-            Alert.alert('Error', 'Please fill in all fields');
+            setError('Please fill in all fields');
             return;
         }
         if (password.length < 6) {
-            Alert.alert('Error', 'Password must be at least 6 characters');
+            setError('Password must be at least 6 characters');
             return;
         }
         if (password !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match');
+            setError('Passwords do not match');
             return;
         }
         setLoading(true);
         try {
             await register(name.trim(), email.trim(), password);
             router.replace('/(tabs)/patients');
-        } catch (error: any) {
-            Alert.alert('Registration Failed', error.response?.data?.error?.message || 'Something went wrong');
+        } catch (err: any) {
+            const msg =
+                err?.response?.data?.message ||
+                err?.response?.data?.error?.message ||
+                err?.message ||
+                'Something went wrong';
+            setError(msg);
         } finally {
             setLoading(false);
         }
+    };
+
+    const clearError = (setter: (v: string) => void) => (t: string) => {
+        setter(t);
+        setError('');
     };
 
     return (
@@ -45,18 +57,25 @@ export default function RegisterScreen() {
                 <Text style={styles.title}>Create Account</Text>
                 <Text style={styles.subtitle}>Join MediPulse</Text>
 
+                {error ? (
+                    <View style={styles.errorBanner}>
+                        <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                        <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                ) : null}
+
                 <TextInput
                     style={styles.input}
                     placeholder="Full Name"
                     value={name}
-                    onChangeText={setName}
+                    onChangeText={clearError(setName)}
                     placeholderTextColor="#9CA3AF"
                 />
                 <TextInput
                     style={styles.input}
                     placeholder="Email"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={clearError(setEmail)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     placeholderTextColor="#9CA3AF"
@@ -67,7 +86,7 @@ export default function RegisterScreen() {
                         style={styles.passwordInput}
                         placeholder="Password"
                         value={password}
-                        onChangeText={setPassword}
+                        onChangeText={clearError(setPassword)}
                         secureTextEntry={!showPassword}
                         placeholderTextColor="#9CA3AF"
                     />
@@ -81,7 +100,7 @@ export default function RegisterScreen() {
                         style={styles.passwordInput}
                         placeholder="Confirm Password"
                         value={confirmPassword}
-                        onChangeText={setConfirmPassword}
+                        onChangeText={clearError(setConfirmPassword)}
                         secureTextEntry={!showPassword}
                         placeholderTextColor="#9CA3AF"
                     />
@@ -133,4 +152,17 @@ const styles = StyleSheet.create({
     buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
     link: { marginTop: 16, alignSelf: 'center' },
     linkText: { color: '#4F46E5', fontSize: 14 },
+    errorBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FEF2F2',
+        borderWidth: 1,
+        borderColor: '#FECACA',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        marginBottom: 12,
+        gap: 8,
+    },
+    errorText: { color: '#DC2626', fontSize: 14, flex: 1 },
 });

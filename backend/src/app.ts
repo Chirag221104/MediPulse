@@ -67,11 +67,13 @@ import doseLogRoutes from './routes/douselog.routes';
 import healthLogRoutes from './routes/healthlog.routes';
 
 import reportRoutes from './routes/report.routes';
+import diseaseRoutes from './routes/disease.routes';
 
 // ... imports
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/patients', patientRoutes);
+app.use('/api/v1/diseases', diseaseRoutes);
 app.use('/api/v1/medicines', medicineRoutes);
 app.use('/api/v1/logs/dose', doseLogRoutes);
 app.use('/api/v1/logs/health', healthLogRoutes);

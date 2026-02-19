@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { DoseLogRepository } from '../repositories/douselog.repository';
 import { MedicineRepository } from '../repositories/medicine.repository';
 import { PatientRepository } from '../repositories/patient.repository';
@@ -42,38 +43,62 @@ export class DoseLogService {
 
         const { medicine } = await this.verifyOwnership(userId, data.medicineId.toString());
 
+        // Disease Guard
+        let diseaseType: 'normal' | 'regular' = 'regular';
+        if (medicine.diseaseId) {
+            const disease = await mongoose.model('Disease').findOne({ _id: medicine.diseaseId, isActive: true });
+            if (!disease) {
+                throw new AppError('Linked disease not found', 404);
+            }
+            if (disease.status !== 'active') {
+                throw new AppError(`Cannot log dose. Treatment course is ${disease.status}`, 403);
+            }
+            diseaseType = disease.type;
+        }
+
         // Normalize Date to 00:00:00 for idempotency
         const scheduledFor = new Date(data.scheduledFor);
         scheduledFor.setHours(0, 0, 0, 0);
 
-        // Calculate Stock Decrement based on slot override or global dose
+        // Calculate Dose Quantity
         const slotConfig = medicine.schedule.slots.find(s => s.timeOfDay === data.slot);
-        const decrement = slotConfig?.quantity !== undefined ? slotConfig.quantity : medicine.dose.quantityPerDose;
+        const doseQuantity = slotConfig?.quantity !== undefined ? slotConfig.quantity : medicine.dose.quantityPerDose;
 
         let lowStock = false;
 
-        // Atomic Stock Decrement if taken
-        if (data.status === 'taken' && decrement > 0) {
-            const updatedMedicine = await Medicine.findOneAndUpdate(
-                { _id: data.medicineId, stock: { $gte: decrement } },
-                { $inc: { stock: -decrement } },
-                { returnDocument: 'after' }
-            );
-
-            if (!updatedMedicine) {
-                const currentMed = await this.medicineRepo.findById(data.medicineId.toString());
-                if (currentMed && currentMed.stock < decrement) {
-                    throw new AppError(`Insufficient stock. Need ${decrement}, have ${currentMed.stock}`, 409);
-                }
-                throw new AppError('Medicine update failed', 500);
-            }
-
-            // Check Low Stock Threshold
-            if (updatedMedicine.stock <= updatedMedicine.lowStockThreshold) {
-                lowStock = true;
-                import('../utils/alert').then(({ triggerLowStockAlert }) => {
-                    triggerLowStockAlert(updatedMedicine);
+        // Atomic Update if taken
+        if (data.status === 'taken' && doseQuantity > 0) {
+            if (diseaseType === 'normal') {
+                // For acute courses: Increment consumedQuantity
+                await Medicine.findByIdAndUpdate(data.medicineId, {
+                    $inc: { consumedQuantity: doseQuantity }
                 });
+
+                // Check if this completes the course (optional: could be a hook)
+                // We'll let the next GET request or a background check handle status flip to keep logging fast
+            } else {
+                // For chronic/standalone: Decrement stock
+                const updatedMedicine = await Medicine.findOneAndUpdate(
+                    { _id: data.medicineId, stock: { $gte: doseQuantity } },
+                    { $inc: { stock: -doseQuantity } },
+                    { returnDocument: 'after' }
+                );
+
+                if (!updatedMedicine) {
+                    const currentMed = await this.medicineRepo.findById(data.medicineId.toString());
+                    if (currentMed && (currentMed.stock || 0) < doseQuantity) {
+                        throw new AppError(`Insufficient stock. Need ${doseQuantity}, have ${currentMed.stock || 0}`, 409);
+                    }
+                    throw new AppError('Medicine update failed', 500);
+                }
+
+                // Check Low Stock Threshold
+                if (updatedMedicine.stock !== undefined && updatedMedicine.stock <= updatedMedicine.lowStockThreshold) {
+                    lowStock = true;
+                    import('../utils/alert').then(({ triggerLowStockAlert }) => {
+                        triggerLowStockAlert(updatedMedicine);
+                    });
+                }
             }
         }
 
@@ -85,9 +110,13 @@ export class DoseLogService {
             });
             return { log, lowStock };
         } catch (error: any) {
-            // Idempotency: Revert stock if taken
-            if (data.status === 'taken' && decrement > 0) {
-                await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { stock: decrement } });
+            // Idempotency: Revert if taken
+            if (data.status === 'taken' && doseQuantity > 0) {
+                if (diseaseType === 'normal') {
+                    await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { consumedQuantity: -doseQuantity } });
+                } else {
+                    await Medicine.findByIdAndUpdate(data.medicineId, { $inc: { stock: doseQuantity } });
+                }
             }
 
             if (error.code === 11000) {

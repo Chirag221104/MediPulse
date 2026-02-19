@@ -27,14 +27,17 @@ const doseSchema = z.object({
 export const createMedicineSchema = z.object({
     body: z.object({
         patientId: objectIdSchema,
+        diseaseId: objectIdSchema.optional(),
         name: z.string().min(1, 'Name is required'),
         type: z.enum(['Tablet', 'Syrup', 'Injection', 'Drops', 'Cream', 'Inhaler']),
         dose: doseSchema,
         schedule: z.object({
             slots: z.array(scheduleSlotSchema).min(1, 'At least one intake slot is required'),
         }),
-        stock: z.number().int().min(0, 'Stock must be non-negative'),
+        stock: z.number().int().min(0, 'Stock must be non-negative').optional(),
         lowStockThreshold: z.number().int().min(0).optional(),
+        totalQuantityRequired: z.number().min(0).optional(),
+        consumedQuantity: z.number().min(0).optional(),
         startDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).transform(val => new Date(val)),
         endDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().transform(val => val ? new Date(val) : undefined),
     }).superRefine((data, ctx) => {
@@ -88,6 +91,9 @@ export const updateMedicineSchema = z.object({
         }).optional(),
         stock: z.number().int().min(0).optional(),
         lowStockThreshold: z.number().int().min(0).optional(),
+        diseaseId: objectIdSchema.optional(),
+        totalQuantityRequired: z.number().min(0).optional(),
+        consumedQuantity: z.number().min(0).optional(),
         startDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().transform(val => val ? new Date(val) : undefined),
         endDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().transform(val => val ? new Date(val) : undefined),
         isActive: z.boolean().optional(),

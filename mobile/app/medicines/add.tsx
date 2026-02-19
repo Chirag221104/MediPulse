@@ -3,7 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateMedicine } from '../../src/hooks/useMedicines';
+import { useDiseases } from '../../src/hooks/useDiseases';
 import { usePatientContext } from '../../src/context/PatientContext';
+import { Disease } from '../../src/services/disease.service';
 
 const TYPES = ['Tablet', 'Syrup', 'Injection', 'Drops', 'Cream', 'Inhaler'] as const;
 const SLOTS = [
@@ -18,24 +20,27 @@ type MealRelation = 'before_breakfast' | 'after_breakfast' | 'before_lunch' | 'a
 interface FormSlot {
     timeOfDay: SlotId;
     mealRelation?: MealRelation;
-    quantity?: string; // String for input, convert to number on submit
+    quantity?: string;
 }
 
 export default function AddMedicineScreen() {
     const router = useRouter();
     const { activePatientId } = usePatientContext();
     const createMedicine = useCreateMedicine();
+    const { diseases, createDisease } = useDiseases(activePatientId ?? undefined);
+
+    // Disease Selection
+    const [selectedDiseaseId, setSelectedDiseaseId] = useState<string | 'new' | ''>('');
+    const [newDiseaseName, setNewDiseaseName] = useState('');
+    const [newDiseaseType, setNewDiseaseType] = useState<'normal' | 'regular'>('normal');
+    const [newDiseaseDuration, setNewDiseaseDuration] = useState('7');
 
     // Medicine Info
     const [name, setName] = useState('');
     const [type, setType] = useState<typeof TYPES[number]>('Tablet');
-
-    // Dose Structure
     const [strength, setStrength] = useState('');
     const [quantityPerDose, setQuantityPerDose] = useState('1');
     const [unit, setUnit] = useState('tablet');
-
-    // Schedule Structure
     const [slots, setSlots] = useState<FormSlot[]>([]);
 
     // Stock & Metadata
@@ -61,29 +66,43 @@ export default function AddMedicineScreen() {
         setSlots(slots.map(s => s.timeOfDay === slotId ? { ...s, quantity: qty } : s));
     };
 
-    const handleSubmit = () => {
-        if (!activePatientId) {
-            Alert.alert('Error', 'No patient selected');
-            return;
-        }
-        if (!name.trim() || !quantityPerDose.trim() || !unit.trim() || !stock.trim()) {
+    const handleSubmit = async () => {
+        if (!activePatientId) return Alert.alert('Error', 'No patient selected');
+        if (!selectedDiseaseId) return Alert.alert('Error', 'Please select or create a treatment course');
+        if (!name.trim() || !quantityPerDose.trim() || !unit.trim()) {
             Alert.alert('Error', 'Please fill in all required fields (*)');
             return;
         }
-        if (slots.length === 0) {
-            Alert.alert('Error', 'Please select at least one intake time');
-            return;
+
+        let diseaseId = selectedDiseaseId;
+
+        // Create new disease if needed
+        if (selectedDiseaseId === 'new') {
+            if (!newDiseaseName.trim()) return Alert.alert('Error', 'Please enter treatment name');
+            try {
+                const disease = await createDisease({
+                    patientId: activePatientId,
+                    name: newDiseaseName.trim(),
+                    type: newDiseaseType,
+                    durationInDays: newDiseaseType === 'normal' ? parseInt(newDiseaseDuration) : undefined,
+                    status: 'active'
+                });
+                diseaseId = disease._id;
+            } catch (error: any) {
+                return Alert.alert('Error', 'Failed to create treatment course');
+            }
         }
 
         const qtyNum = parseFloat(quantityPerDose);
-        const stockNum = parseFloat(stock);
+        const stockNum = stock ? parseFloat(stock) : undefined;
         const thresholdNum = parseInt(lowStockThreshold, 10);
 
         if (isNaN(qtyNum) || qtyNum <= 0) return Alert.alert('Error', 'Invalid dose quantity');
-        if (isNaN(stockNum) || stockNum < 0) return Alert.alert('Error', 'Invalid stock amount');
+        if (slots.length === 0) return Alert.alert('Error', 'Please select at least one intake time');
 
         const payload = {
             patientId: activePatientId,
+            diseaseId: diseaseId === 'new' ? undefined : diseaseId, // Should be set by now
             name: name.trim(),
             type,
             dose: {
@@ -112,7 +131,46 @@ export default function AddMedicineScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>Treatment Course</Text>
+            <Text style={styles.subLabel}>Link this medication to a condition</Text>
+
+            <View style={styles.chipRow}>
+                {diseases.filter(d => d.status === 'active').map((d) => (
+                    <TouchableOpacity key={d._id} style={[styles.chip, selectedDiseaseId === d._id && styles.activeChip]} onPress={() => setSelectedDiseaseId(d._id)}>
+                        <Text style={[styles.chipText, selectedDiseaseId === d._id && styles.activeChipText]}>{d.name}</Text>
+                    </TouchableOpacity>
+                ))}
+                <TouchableOpacity style={[styles.chip, selectedDiseaseId === 'new' && styles.activeChip]} onPress={() => setSelectedDiseaseId('new')}>
+                    <Ionicons name="add" size={14} color={selectedDiseaseId === 'new' ? '#fff' : '#4B5563'} />
+                    <Text style={[styles.chipText, selectedDiseaseId === 'new' && styles.activeChipText]}>New Treatment</Text>
+                </TouchableOpacity>
+            </View>
+
+            {selectedDiseaseId === 'new' && (
+                <View style={styles.newDiseaseForm}>
+                    <Text style={styles.label}>Treatment Name *</Text>
+                    <TextInput style={styles.input} value={newDiseaseName} onChangeText={setNewDiseaseName} placeholder="e.g. Fever, Hypertension" placeholderTextColor="#9CA3AF" />
+
+                    <Text style={styles.label}>Treatment Type</Text>
+                    <View style={styles.chipRow}>
+                        <TouchableOpacity style={[styles.chip, newDiseaseType === 'normal' && styles.activeChip]} onPress={() => setNewDiseaseType('normal')}>
+                            <Text style={[styles.chipText, newDiseaseType === 'normal' && styles.activeChipText]}>Acute (Temporary)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.chip, newDiseaseType === 'regular' && styles.activeChip]} onPress={() => setNewDiseaseType('regular')}>
+                            <Text style={[styles.chipText, newDiseaseType === 'regular' && styles.activeChipText]}>Chronic (Ongoing)</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {newDiseaseType === 'normal' && (
+                        <>
+                            <Text style={styles.label}>Duration (Days) *</Text>
+                            <TextInput style={styles.input} value={newDiseaseDuration} onChangeText={setNewDiseaseDuration} placeholder="7" keyboardType="numeric" />
+                        </>
+                    )}
+                </View>
+            )}
+
+            <Text style={styles.sectionTitle}>Medicine Information</Text>
 
             <Text style={styles.label}>Medicine Name *</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Paracetamol" placeholderTextColor="#9CA3AF" />
@@ -130,8 +188,6 @@ export default function AddMedicineScreen() {
                     </TouchableOpacity>
                 ))}
             </View>
-
-            <Text style={styles.sectionTitle}>Dosage Details</Text>
 
             <View style={styles.row}>
                 <View style={{ flex: 1, marginRight: 8 }}>
@@ -200,18 +256,21 @@ export default function AddMedicineScreen() {
                 );
             })}
 
-            <Text style={styles.sectionTitle}>Inventory</Text>
-
-            <View style={styles.row}>
-                <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.label}>Current Stock *</Text>
-                    <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="Total units" keyboardType="numeric" />
-                </View>
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                    <Text style={styles.label}>Low Alert At</Text>
-                    <TextInput style={styles.input} value={lowStockThreshold} onChangeText={setLowStockThreshold} placeholder="5" keyboardType="numeric" />
-                </View>
-            </View>
+            {(newDiseaseType === 'regular' || (selectedDiseaseId !== 'new' && diseases.find(d => d._id === selectedDiseaseId)?.type === 'regular')) && (
+                <>
+                    <Text style={styles.sectionTitle}>Inventory</Text>
+                    <View style={styles.row}>
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                            <Text style={styles.label}>Current Stock *</Text>
+                            <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="Total units" keyboardType="numeric" />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                            <Text style={styles.label}>Low Alert At</Text>
+                            <TextInput style={styles.input} value={lowStockThreshold} onChangeText={setLowStockThreshold} placeholder="5" keyboardType="numeric" />
+                        </View>
+                    </View>
+                </>
+            )}
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={createMedicine.isPending}>
                 {createMedicine.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Save Medicine</Text>}
@@ -272,6 +331,10 @@ const styles = StyleSheet.create({
         shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
     },
     submitText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+    newDiseaseForm: {
+        backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 8,
+        borderWidth: 1, borderColor: '#4F46E5', borderStyle: 'dashed'
+    },
     emptyText: { fontSize: 18, fontWeight: '600', color: '#6B7280', marginTop: 12 },
     emptySubtext: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
     errorText: { fontSize: 16, color: '#EF4444', marginBottom: 12 },

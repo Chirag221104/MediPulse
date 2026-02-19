@@ -14,11 +14,12 @@ export const useCreateMedicine = () => {
     return useMutation({
         mutationFn: (payload: {
             patientId: string;
+            diseaseId?: string;
             name: string;
             type: string;
             dose: Medicine['dose'];
             schedule: Medicine['schedule'];
-            stock: number;
+            stock?: number;
             lowStockThreshold?: number;
             startDate: string;
             endDate?: string;

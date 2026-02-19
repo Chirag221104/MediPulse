@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { MedicineRepository } from '../repositories/medicine.repository';
 import { PatientRepository } from '../repositories/patient.repository';
 import { IMedicine } from '../models/medicine.model';
@@ -29,37 +30,63 @@ export class MedicineService {
             throw new AppError('Patient ID is required', 400);
         }
         await this.verifyPatientOwnership(userId, data.patientId.toString());
+
+        // Dynamic Calculation for 'normal' disease
+        if (data.diseaseId) {
+            const disease = await mongoose.model('Disease').findById(data.diseaseId);
+            if (disease && disease.type === 'normal') {
+                const slotsPerDay = data.schedule?.slots?.length || 0;
+                const dosagePerSlot = data.dose?.quantityPerDose || 0;
+                const duration = disease.durationInDays || 0;
+                data.totalQuantityRequired = dosagePerSlot * slotsPerDay * duration;
+                data.stock = undefined; // Force remove stock for normal
+            }
+        }
+
         return await this.medicineRepo.create(data);
     }
 
     async getMedicines(userId: string, patientId: string) {
         await this.verifyPatientOwnership(userId, patientId);
-        return await this.medicineRepo.findByPatientId(patientId);
+        // Only return active medicines
+        return await this.medicineRepo.find({ patientId, isActive: true });
     }
 
     async getMedicineById(userId: string, medicineId: string) {
         const medicine = await this.medicineRepo.findById(medicineId);
-        if (!medicine) {
+        if (!medicine || !medicine.isActive) {
             throw new AppError('Medicine not found', 404);
         }
-        // Implicitly checks if user owns the patient this medicine belongs to
         await this.verifyPatientOwnership(userId, medicine.patientId.toString());
         return medicine;
     }
 
     async updateMedicine(userId: string, medicineId: string, data: Partial<IMedicine>) {
-        const medicine = await this.getMedicineById(userId, medicineId); // Check ownership
+        const medicine = await this.getMedicineById(userId, medicineId);
 
-        // If patientId is being updated (rare, but possible), verify new patient ownership
         if (data.patientId && data.patientId.toString() !== medicine.patientId.toString()) {
             await this.verifyPatientOwnership(userId, data.patientId.toString());
+        }
+
+        // Recalculate if dosage/slots changed for 'normal' disease
+        const diseaseId = data.diseaseId || medicine.diseaseId;
+        if (diseaseId) {
+            const disease = await mongoose.model('Disease').findById(diseaseId);
+            if (disease && disease.type === 'normal') {
+                const slotsPerDay = data.schedule?.slots?.length || medicine.schedule.slots.length;
+                const dosagePerSlot = data.dose?.quantityPerDose || medicine.dose.quantityPerDose;
+                const duration = disease.durationInDays || 0;
+                data.totalQuantityRequired = dosagePerSlot * slotsPerDay * duration;
+                data.stock = undefined;
+            }
         }
 
         return await this.medicineRepo.update(medicineId, data);
     }
 
     async deleteMedicine(userId: string, medicineId: string) {
-        await this.getMedicineById(userId, medicineId); // Check ownership
-        return await this.medicineRepo.delete(medicineId);
+        await this.getMedicineById(userId, medicineId);
+        // Soft delete
+        return await this.medicineRepo.update(medicineId, { isActive: false });
     }
 }

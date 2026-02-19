@@ -10,6 +10,7 @@ export interface ScheduleSlot {
 export interface Medicine {
     _id: string;
     patientId: string;
+    diseaseId?: string;
     name: string;
     type: 'Tablet' | 'Syrup' | 'Injection' | 'Drops' | 'Cream' | 'Inhaler';
     dose: {
@@ -20,8 +21,10 @@ export interface Medicine {
     schedule: {
         slots: ScheduleSlot[];
     };
-    stock: number;
+    stock?: number;
     lowStockThreshold: number;
+    totalQuantityRequired?: number;
+    consumedQuantity: number;
     startDate: string;
     endDate?: string;
     isActive: boolean;
@@ -45,11 +48,12 @@ export const medicineService = {
 
     create: async (payload: {
         patientId: string;
+        diseaseId?: string;
         name: string;
         type: string;
         dose: Medicine['dose'];
         schedule: Medicine['schedule'];
-        stock: number;
+        stock?: number;
         lowStockThreshold?: number;
         startDate: string;
         endDate?: string;

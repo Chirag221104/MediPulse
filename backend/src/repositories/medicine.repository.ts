@@ -18,6 +18,10 @@ export class MedicineRepository {
         return await Medicine.findByIdAndUpdate(id, data, { returnDocument: 'after' });
     }
 
+    async find(filter: any): Promise<IMedicine[]> {
+        return await Medicine.find(filter).sort({ createdAt: -1 });
+    }
+
     async delete(id: string): Promise<IMedicine | null> {
         return await Medicine.findByIdAndDelete(id);
     }
