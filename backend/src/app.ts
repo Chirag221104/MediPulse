@@ -25,6 +25,22 @@ if (process.env.NODE_ENV === 'production') {
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN }));
 
+// Health Check (Public, no rate limiting)
+import mongoose from 'mongoose';
+app.get('/health', (_req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'UP' : 'DOWN';
+    const status = dbStatus === 'UP' ? 200 : 503;
+    res.status(status).json({
+        status: dbStatus === 'UP' ? 'UP' : 'DOWN',
+        timestamp: new Date(),
+        db: dbStatus,
+        details: {
+            connections: mongoose.connections.length,
+            readyState: mongoose.connection.readyState
+        }
+    });
+});
+
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -42,22 +58,6 @@ app.use(compression());
 // Logging
 app.use(correlationIdMiddleware);
 app.use(morgan('combined', { stream: { write: (message) => logger.http(message.trim()) } }));
-
-// Health Check
-import mongoose from 'mongoose';
-app.get('/health', (_req, res) => {
-    const dbStatus = mongoose.connection.readyState === 1 ? 'UP' : 'DOWN';
-    const status = dbStatus === 'UP' ? 200 : 503;
-    res.status(status).json({
-        status: dbStatus === 'UP' ? 'UP' : 'DOWN',
-        timestamp: new Date(),
-        db: dbStatus,
-        details: {
-            connections: mongoose.connections.length,
-            readyState: mongoose.connection.readyState
-        }
-    });
-});
 
 // Routes
 import authRoutes from './routes/auth.routes';

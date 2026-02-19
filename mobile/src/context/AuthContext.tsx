@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../utils/storage';
 import { authService, AuthResponse } from '../services/auth.service';
 import { setAccessToken } from '../services/api';
 
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const restoreSession = async () => {
             try {
-                const refreshToken = await SecureStore.getItemAsync('refreshToken');
+                const refreshToken = await getItemAsync('refreshToken');
                 if (!refreshToken) {
                     setIsLoading(false);
                     return;
@@ -38,18 +38,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setAccessToken(result.accessToken);
 
                 if (result.refreshToken) {
-                    await SecureStore.setItemAsync('refreshToken', result.refreshToken);
+                    await setItemAsync('refreshToken', result.refreshToken);
                 }
 
                 // Decode user from stored data
-                const storedUser = await SecureStore.getItemAsync('user');
+                const storedUser = await getItemAsync('user');
                 if (storedUser) {
                     setUser(JSON.parse(storedUser));
                 }
             } catch {
                 // Refresh failed → clean up
-                await SecureStore.deleteItemAsync('refreshToken');
-                await SecureStore.deleteItemAsync('user');
+                await deleteItemAsync('refreshToken');
+                await deleteItemAsync('user');
                 setAccessToken(null);
             } finally {
                 setIsLoading(false);
@@ -61,8 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const handleAuthSuccess = useCallback(async (result: AuthResponse) => {
         setAccessToken(result.accessToken);
-        await SecureStore.setItemAsync('refreshToken', result.refreshToken);
-        await SecureStore.setItemAsync('user', JSON.stringify(result.user));
+        await setItemAsync('refreshToken', result.refreshToken);
+        await setItemAsync('user', JSON.stringify(result.user));
         setUser(result.user);
     }, []);
 
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = useCallback(async () => {
         try {
-            const refreshToken = await SecureStore.getItemAsync('refreshToken');
+            const refreshToken = await getItemAsync('refreshToken');
             if (refreshToken) {
                 await authService.logout(refreshToken);
             }
@@ -87,8 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setAccessToken(null);
             setUser(null);
-            await SecureStore.deleteItemAsync('refreshToken');
-            await SecureStore.deleteItemAsync('user');
+            await deleteItemAsync('refreshToken');
+            await deleteItemAsync('user');
         }
     }, []);
 

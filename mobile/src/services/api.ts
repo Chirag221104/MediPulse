@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../utils/storage';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -40,7 +40,7 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                const refreshToken = await SecureStore.getItemAsync('refreshToken');
+                const refreshToken = await getItemAsync('refreshToken');
                 if (!refreshToken) {
                     // No refresh token → force logout
                     setAccessToken(null);
@@ -59,7 +59,7 @@ api.interceptors.response.use(
 
                 // Persist new refresh token
                 if (newRefreshToken) {
-                    await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+                    await setItemAsync('refreshToken', newRefreshToken);
                 }
 
                 // Retry original request with new token
@@ -68,7 +68,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 // Refresh failed → force logout
                 setAccessToken(null);
-                await SecureStore.deleteItemAsync('refreshToken');
+                await deleteItemAsync('refreshToken');
                 return Promise.reject(refreshError);
             }
         }
