@@ -10,6 +10,7 @@ export interface IUser extends Document {
         issuedAt: Date;
         expiresAt: Date;
     };
+    fcmTokens: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -20,6 +21,7 @@ const userSchema = new Schema<IUser>(
         email: { type: String, required: true, unique: true },
         passwordHash: { type: String, required: true },
         role: { type: String, enum: ['user', 'admin', 'caregiver'], default: 'user' },
+        fcmTokens: { type: [String], default: [] },
         refreshToken: {
             tokenHash: { type: String },
             issuedAt: { type: Date },

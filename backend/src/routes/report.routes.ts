@@ -12,6 +12,7 @@ const reportQuerySchema = z.object({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
         type: z.enum(['blood_sugar', 'blood_pressure', 'weight', 'heart_rate', 'spo2']).optional(),
+        diseaseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId').optional(),
     }),
 });
 

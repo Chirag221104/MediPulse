@@ -28,3 +28,13 @@ export const useDeletePatient = () => {
         },
     });
 };
+export const useUpdatePatient = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: Partial<Patient> }) =>
+            patientService.update(id, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['patients'] });
+        },
+    });
+};

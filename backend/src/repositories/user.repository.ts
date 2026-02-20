@@ -27,4 +27,8 @@ export class UserRepository {
             });
         }
     }
+
+    async update(id: string, data: any): Promise<IUser | null> {
+        return await User.findByIdAndUpdate(id, data, { new: true });
+    }
 }

@@ -1,9 +1,19 @@
-import { Tabs, Redirect } from 'expo-router';
+import { Tabs, Redirect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme } from '../../src/context/ThemeContext';
+import { Colors } from '../../src/constants/Colors';
 
 export default function TabsLayout() {
+  const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const { mode, setMode, theme: activeTheme } = useTheme();
+  const theme = Colors[activeTheme];
+
+  const toggleTheme = () => {
+    setMode(activeTheme === 'dark' ? 'light' : 'dark');
+  };
 
   if (isLoading) return null;
 
@@ -14,12 +24,34 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4F46E5',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: { borderTopWidth: 1, borderTopColor: '#E5E7EB' },
-        headerStyle: { backgroundColor: '#4F46E5' },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.inactive,
+        tabBarStyle: {
+          backgroundColor: theme.tabBar,
+          borderTopWidth: 1,
+          borderTopColor: theme.border
+        },
+        headerStyle: { backgroundColor: theme.primary },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: '600' },
+        headerRight: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, gap: 12 }}>
+            <TouchableOpacity onPress={() => router.push('/settings')} style={{ padding: 4 }}>
+              <Ionicons
+                name="settings-outline"
+                size={22}
+                color="#fff"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme} style={{ padding: 4 }}>
+              <Ionicons
+                name={activeTheme === 'dark' ? 'sunny' : 'moon'}
+                size={22}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
+        ),
       }}
     >
       <Tabs.Screen

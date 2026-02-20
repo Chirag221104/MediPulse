@@ -42,9 +42,9 @@ export const reportService = {
         return data.data;
     },
 
-    downloadPdf: async (patientId: string, startDate: string, endDate: string): Promise<void> => {
+    downloadPdf: async (patientId: string, startDate: string, endDate: string, diseaseId?: string): Promise<void> => {
         const response = await api.get('/reports/pdf', {
-            params: { patientId, startDate, endDate },
+            params: { patientId, startDate, endDate, ...(diseaseId ? { diseaseId } : {}) },
             responseType: 'arraybuffer',
         });
 

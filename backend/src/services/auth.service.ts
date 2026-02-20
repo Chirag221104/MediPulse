@@ -74,6 +74,13 @@ export class AuthService {
         await this.userRepo.updateRefreshToken(userId, null);
     }
 
+    async registerFcmToken(userId: string, token: string) {
+        // Save token to user's tokens array if not already there
+        await this.userRepo.update(userId, {
+            $addToSet: { fcmTokens: token }
+        } as any);
+    }
+
     private async generateTokens(user: IUser) {
         const accessToken = signAccessToken({ userId: (user as any)._id, role: user.role });
         const refreshToken = signRefreshToken({ userId: (user as any)._id });

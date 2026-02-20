@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
+import { AppError } from '../utils/AppError';
 
 const authService = new AuthService();
 
@@ -52,6 +53,21 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
         res.status(200).json({
             success: true,
             message: 'Logged out successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const registerFcmToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { token } = req.body;
+        if (!token) throw new AppError('Token is required', 400);
+
+        await authService.registerFcmToken(req.user.userId, token);
+        res.status(200).json({
+            success: true,
+            message: 'FCM token registered successfully',
         });
     } catch (error) {
         next(error);

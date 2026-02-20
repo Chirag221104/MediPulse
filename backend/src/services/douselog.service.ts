@@ -56,9 +56,9 @@ export class DoseLogService {
             diseaseType = disease.type;
         }
 
-        // Normalize Date to 00:00:00 for idempotency
+        // Normalize Date to 00:00:00 UTC for idempotency
         const scheduledFor = new Date(data.scheduledFor);
-        scheduledFor.setHours(0, 0, 0, 0);
+        scheduledFor.setUTCHours(0, 0, 0, 0);
 
         // Calculate Dose Quantity
         const slotConfig = medicine.schedule.slots.find(s => s.timeOfDay === data.slot);

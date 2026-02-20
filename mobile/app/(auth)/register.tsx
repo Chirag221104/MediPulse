@@ -1,33 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../../src/constants/Colors';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function RegisterScreen() {
-    const { register } = useAuth();
+    const { register, isLoading } = useAuth();
+    const router = useRouter();
+    const { theme: activeTheme } = useTheme();
+    const theme = Colors[activeTheme];
+    const styles = getStyles(theme);
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const router = useRouter();
-
     const handleRegister = async () => {
         setError('');
-        if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+        if (!name.trim() || !email.trim() || !password.trim()) {
             setError('Please fill in all fields');
-            return;
-        }
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters');
-            return;
-        }
-        if (password !== confirmPassword) {
-            setError('Passwords do not match');
             return;
         }
         setLoading(true);
@@ -35,134 +31,111 @@ export default function RegisterScreen() {
             await register(name.trim(), email.trim(), password);
             router.replace('/(tabs)/patients');
         } catch (err: any) {
-            const msg =
-                err?.response?.data?.message ||
-                err?.response?.data?.error?.message ||
-                err?.message ||
-                'Something went wrong';
-            setError(msg);
+            setError(err?.response?.data?.message || 'Registration failed. Try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const clearError = (setter: (v: string) => void) => (t: string) => {
-        setter(t);
-        setError('');
-    };
-
     return (
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <View style={styles.inner}>
-                <Text style={styles.title}>Create Account</Text>
-                <Text style={styles.subtitle}>Join MediPulse</Text>
+        <KeyboardAvoidingView style={[styles.container, { backgroundColor: theme.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView contentContainerStyle={styles.inner}>
+                <Text style={[styles.title, { color: theme.primary }]}>Join MediPulse</Text>
+                <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Manage your family's health better</Text>
 
                 {error ? (
-                    <View style={styles.errorBanner}>
-                        <Ionicons name="alert-circle" size={18} color="#DC2626" />
-                        <Text style={styles.errorText}>{error}</Text>
+                    <View style={[styles.errorBanner, { backgroundColor: theme.error + '10', borderColor: theme.error }]}>
+                        <Ionicons name="alert-circle" size={18} color={theme.error} />
+                        <Text style={[styles.errorText, { color: theme.error }]}>{error}</Text>
                     </View>
                 ) : null}
 
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
                     placeholder="Full Name"
                     value={name}
-                    onChangeText={clearError(setName)}
-                    placeholderTextColor="#9CA3AF"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={clearError(setEmail)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    placeholderTextColor="#9CA3AF"
+                    onChangeText={(t) => { setName(t); setError(''); }}
+                    placeholderTextColor={theme.inactive}
                 />
 
-                <View style={styles.passwordContainer}>
+                <TextInput
+                    style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={(t) => { setEmail(t); setError(''); }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholderTextColor={theme.inactive}
+                />
+
+                <View style={[styles.passwordContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
                     <TextInput
-                        style={styles.passwordInput}
+                        style={[styles.passwordInput, { color: theme.text }]}
                         placeholder="Password"
                         value={password}
-                        onChangeText={clearError(setPassword)}
+                        onChangeText={(t) => { setPassword(t); setError(''); }}
                         secureTextEntry={!showPassword}
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={theme.inactive}
                     />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                        <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#6B7280" />
+                        <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color={theme.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        style={styles.passwordInput}
-                        placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChangeText={clearError(setConfirmPassword)}
-                        secureTextEntry={!showPassword}
-                        placeholderTextColor="#9CA3AF"
-                    />
-                </View>
-
-                <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
+                <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleRegister} disabled={loading}>
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
                 </TouchableOpacity>
 
                 <Link href="/(auth)/login" style={styles.link}>
-                    <Text style={styles.linkText}>Already have an account? Login</Text>
+                    <Text style={[styles.linkText, { color: theme.primary }]}>Already have an account? Login</Text>
                 </Link>
-            </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F9FAFB' },
-    inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-    title: { fontSize: 32, fontWeight: '700', color: '#4F46E5', textAlign: 'center', marginBottom: 4 },
-    subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center', marginBottom: 32 },
-    input: {
-        backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12,
-        paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 12, color: '#111827',
-    },
-    passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#E5E7EB',
-        borderRadius: 12,
-        marginBottom: 12,
-    },
-    passwordInput: {
-        flex: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        fontSize: 16,
-        color: '#111827',
-    },
-    eyeIcon: {
-        paddingHorizontal: 16,
-    },
-    button: {
-        backgroundColor: '#4F46E5', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 8,
-    },
-    buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-    link: { marginTop: 16, alignSelf: 'center' },
-    linkText: { color: '#4F46E5', fontSize: 14 },
-    errorBanner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FEF2F2',
-        borderWidth: 1,
-        borderColor: '#FECACA',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        marginBottom: 12,
-        gap: 8,
-    },
-    errorText: { color: '#DC2626', fontSize: 14, flex: 1 },
-});
+function getStyles(theme: any) {
+    return StyleSheet.create({
+        container: { flex: 1 },
+        inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 },
+        title: { fontSize: 32, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
+        subtitle: { fontSize: 16, textAlign: 'center', marginBottom: 32 },
+        input: {
+            borderWidth: 1, borderRadius: 12,
+            paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 12,
+        },
+        passwordContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderRadius: 12,
+            marginBottom: 12,
+        },
+        passwordInput: {
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            fontSize: 16,
+        },
+        eyeIcon: {
+            paddingHorizontal: 16,
+        },
+        button: {
+            borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 8,
+        },
+        buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+        link: { marginTop: 16, alignSelf: 'center' },
+        linkText: { fontSize: 14 },
+        errorBanner: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            marginBottom: 12,
+            gap: 8,
+        },
+        errorText: { fontSize: 14, flex: 1 },
+    });
+}

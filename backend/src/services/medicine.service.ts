@@ -1,16 +1,19 @@
 import mongoose from 'mongoose';
 import { MedicineRepository } from '../repositories/medicine.repository';
 import { PatientRepository } from '../repositories/patient.repository';
+import { DiseaseRepository } from '../repositories/disease.repository';
 import { IMedicine } from '../models/medicine.model';
 import { AppError } from '../utils/AppError';
 
 export class MedicineService {
     private medicineRepo: MedicineRepository;
     private patientRepo: PatientRepository;
+    private diseaseRepo: DiseaseRepository;
 
     constructor() {
         this.medicineRepo = new MedicineRepository();
         this.patientRepo = new PatientRepository();
+        this.diseaseRepo = new DiseaseRepository();
     }
 
     // Helper to verify patient ownership
@@ -33,7 +36,7 @@ export class MedicineService {
 
         // Dynamic Calculation for 'normal' disease
         if (data.diseaseId) {
-            const disease = await mongoose.model('Disease').findById(data.diseaseId);
+            const disease = await this.diseaseRepo.findById(data.diseaseId.toString());
             if (disease && disease.type === 'normal') {
                 const slotsPerDay = data.schedule?.slots?.length || 0;
                 const dosagePerSlot = data.dose?.quantityPerDose || 0;
@@ -71,7 +74,7 @@ export class MedicineService {
         // Recalculate if dosage/slots changed for 'normal' disease
         const diseaseId = data.diseaseId || medicine.diseaseId;
         if (diseaseId) {
-            const disease = await mongoose.model('Disease').findById(diseaseId);
+            const disease = await this.diseaseRepo.findById(diseaseId.toString());
             if (disease && disease.type === 'normal') {
                 const slotsPerDay = data.schedule?.slots?.length || medicine.schedule.slots.length;
                 const dosagePerSlot = data.dose?.quantityPerDose || medicine.dose.quantityPerDose;

@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { getItemAsync, setItemAsync, deleteItemAsync } from '../utils/storage';
 import { authService, AuthResponse } from '../services/auth.service';
 import { setAccessToken } from '../services/api';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
 interface User {
     _id: string;
@@ -24,6 +28,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const registerDeviceToken = useCallback(async () => {
+        if (Platform.OS === 'web' || isExpoGo) return;
+
+        try {
+            const Notifications = await import('expo-notifications');
+            const token = (await Notifications.getDevicePushTokenAsync()).data;
+            await authService.registerFcmToken(token);
+            console.log('FCM Token registered successfully:', token);
+        } catch (error) {
+            console.warn('Failed to register FCM token:', error);
+        }
+    }, []);
+
+    const handleAuthSuccess = useCallback(async (result: AuthResponse) => {
+        setAccessToken(result.accessToken);
+        await setItemAsync('refreshToken', result.refreshToken);
+        await setItemAsync('user', JSON.stringify(result.user));
+        setUser(result.user);
+    }, []);
+
     // On mount: attempt to restore session from persisted refresh token
     useEffect(() => {
         const restoreSession = async () => {
@@ -44,7 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Decode user from stored data
                 const storedUser = await getItemAsync('user');
                 if (storedUser) {
-                    setUser(JSON.parse(storedUser));
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
+                    registerDeviceToken(); // Register token on session restore
                 }
             } catch {
                 // Refresh failed → clean up
@@ -57,24 +83,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         restoreSession();
-    }, []);
-
-    const handleAuthSuccess = useCallback(async (result: AuthResponse) => {
-        setAccessToken(result.accessToken);
-        await setItemAsync('refreshToken', result.refreshToken);
-        await setItemAsync('user', JSON.stringify(result.user));
-        setUser(result.user);
-    }, []);
+    }, [registerDeviceToken]);
 
     const login = useCallback(async (email: string, password: string) => {
         const result = await authService.login(email.trim().toLowerCase(), password.trim());
         await handleAuthSuccess(result);
-    }, [handleAuthSuccess]);
+        registerDeviceToken();
+    }, [handleAuthSuccess, registerDeviceToken]);
 
     const register = useCallback(async (name: string, email: string, password: string) => {
         const result = await authService.register(name.trim(), email.trim().toLowerCase(), password.trim());
         await handleAuthSuccess(result);
-    }, [handleAuthSuccess]);
+        registerDeviceToken();
+    }, [handleAuthSuccess, registerDeviceToken]);
 
     const logout = useCallback(async () => {
         try {

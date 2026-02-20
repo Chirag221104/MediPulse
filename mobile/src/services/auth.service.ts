@@ -35,4 +35,8 @@ export const authService = {
     logout: async (refreshToken: string) => {
         await api.post('/auth/logout', { refreshToken });
     },
+
+    registerFcmToken: async (token: string) => {
+        await api.post('/auth/fcm-token', { token });
+    },
 };

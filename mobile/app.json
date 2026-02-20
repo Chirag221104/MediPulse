@@ -4,12 +4,12 @@
     "slug": "medipulse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/medipulse.png",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/medipulse.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,22 +22,37 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/adaptive-foreground.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.chiragmalde.medipulse"
+      "package": "com.chiragmalde.medipulse",
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.USE_FULL_SCREEN_INTENT"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/icon.png",
+      "favicon": "./assets/medipulse.png",
       "themeColor": "#4F46E5",
       "backgroundColor": "#ffffff"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/medipulse.png",
+          "color": "#4F46E5",
+          "sounds": [
+            "./assets/sounds/dawai_time.wav"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

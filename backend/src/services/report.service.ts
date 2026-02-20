@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { DoseLog } from '../models/douselog.model';
 import { HealthLog } from '../models/healthlog.model';
+import { Medicine } from '../models/medicine.model';
+import { Disease } from '../models/disease.model';
 import { PatientRepository } from '../repositories/patient.repository';
 import { AppError } from '../utils/AppError';
 
@@ -24,24 +26,39 @@ export class ReportService {
         }
     }
 
-    async getAdherenceReport(userId: string, patientId: string, startDate: string, endDate: string) {
+    /** Get medicine IDs filtered by disease (if provided) */
+    private async getMedicineIdFilter(patientId: string, diseaseId?: string): Promise<Types.ObjectId[] | null> {
+        if (!diseaseId) return null; // No filter
+        const medicines = await Medicine.find({
+            patientId: new Types.ObjectId(patientId),
+            diseaseId: new Types.ObjectId(diseaseId),
+        }).select('_id').lean();
+        return medicines.map(m => m._id as Types.ObjectId);
+    }
+
+    async getAdherenceReport(userId: string, patientId: string, startDate: string, endDate: string, diseaseId?: string) {
         await this.verifyOwnership(userId, patientId);
 
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        // Simple validation to ensure valid dates
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             throw new AppError('Invalid date format', 400);
         }
 
+        const matchStage: any = {
+            patientId: new Types.ObjectId(patientId),
+            scheduledFor: { $gte: start, $lte: end },
+        };
+
+        // Filter by disease's medicines if diseaseId is provided
+        const medicineIds = await this.getMedicineIdFilter(patientId, diseaseId);
+        if (medicineIds) {
+            matchStage.medicineId = { $in: medicineIds };
+        }
+
         const aggregation = await DoseLog.aggregate([
-            {
-                $match: {
-                    patientId: new Types.ObjectId(patientId),
-                    scheduledTime: { $gte: start, $lte: end },
-                },
-            },
+            { $match: matchStage },
             {
                 $group: {
                     _id: null,
@@ -70,6 +87,48 @@ export class ReportService {
         ]);
 
         return aggregation[0] || { total: 0, taken: 0, skipped: 0, missed: 0, adherencePercentage: 0 };
+    }
+
+    /** Detailed dose log entries for the PDF report */
+    async getDoseLogDetails(userId: string, patientId: string, startDate: string, endDate: string, diseaseId?: string) {
+        await this.verifyOwnership(userId, patientId);
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const query: any = {
+            patientId: new Types.ObjectId(patientId),
+            scheduledFor: { $gte: start, $lte: end },
+        };
+
+        const medicineIds = await this.getMedicineIdFilter(patientId, diseaseId);
+        if (medicineIds) {
+            query.medicineId = { $in: medicineIds };
+        }
+
+        const logs = await DoseLog.find(query).sort({ scheduledFor: -1, slot: 1 }).lean();
+
+        // Fetch medicine names in bulk
+        const logMedIds = [...new Set(logs.map(l => l.medicineId.toString()))];
+        const medicines = await Medicine.find({ _id: { $in: logMedIds } }).lean();
+        const medMap = new Map(medicines.map(m => [m._id.toString(), m.name]));
+
+        return logs.map(log => ({
+            date: log.scheduledFor,
+            slot: log.slot,
+            medicineName: medMap.get(log.medicineId.toString()) || 'Unknown',
+            status: log.status,
+            takenAt: log.takenAt || null,
+        }));
+    }
+
+    /** Get all diseases for a patient (for the report picker) */
+    async getPatientDiseases(userId: string, patientId: string) {
+        await this.verifyOwnership(userId, patientId);
+        const diseases = await Disease.find({
+            patientId: new Types.ObjectId(patientId),
+        }).select('_id name status type startDate endDate').sort({ startDate: -1 }).lean();
+        return diseases;
     }
 
     async getHealthSummary(userId: string, patientId: string, type: string | undefined, startDate: string, endDate: string) {

@@ -9,6 +9,23 @@ export interface Patient {
     relation: string;
     avatarUrl?: string;
     themeColor?: string;
+    mealTimings: {
+        breakfast: string;
+        lunch: string;
+        dinner: string;
+    };
+    alarmSettings?: {
+        leadTime: number;
+        defaultBeforeOffset: number;
+        defaultAfterOffset: number;
+        snoozeMinutes: number;
+        maxSnoozeCount: number;
+        repeatMode: 'daily' | 'specific_days' | 'interval' | 'one_time';
+        fullScreenEnabled: boolean;
+        escalateIfMissed: boolean;
+        gradualVolume: boolean;
+        vibrationEnabled: boolean;
+    };
     createdAt: string;
     updatedAt: string;
 }
