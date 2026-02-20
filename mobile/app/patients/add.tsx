@@ -32,7 +32,7 @@ export default function AddPatientScreen() {
             {
                 name: name.trim(),
                 age: parseInt(age),
-                gender,
+                gender: gender.toLowerCase() as 'male' | 'female' | 'other',
                 relation: relation.trim(),
             },
             {

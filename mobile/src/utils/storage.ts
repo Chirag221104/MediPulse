@@ -8,24 +8,37 @@ import * as SecureStore from 'expo-secure-store';
  */
 
 export async function getItemAsync(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
-        return localStorage.getItem(key);
+    try {
+        if (Platform.OS === 'web') {
+            return localStorage.getItem(key);
+        }
+        return await SecureStore.getItemAsync(key);
+    } catch (e) {
+        console.warn(`Storage getItemAsync failed for key ${key}:`, e);
+        return null;
     }
-    return SecureStore.getItemAsync(key);
 }
 
 export async function setItemAsync(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
-        localStorage.setItem(key, value);
-        return;
+    try {
+        if (Platform.OS === 'web') {
+            localStorage.setItem(key, value);
+            return;
+        }
+        await SecureStore.setItemAsync(key, value);
+    } catch (e) {
+        console.warn(`Storage setItemAsync failed for key ${key}:`, e);
     }
-    return SecureStore.setItemAsync(key, value);
 }
 
 export async function deleteItemAsync(key: string): Promise<void> {
-    if (Platform.OS === 'web') {
-        localStorage.removeItem(key);
-        return;
+    try {
+        if (Platform.OS === 'web') {
+            localStorage.removeItem(key);
+            return;
+        }
+        await SecureStore.deleteItemAsync(key);
+    } catch (e) {
+        console.warn(`Storage deleteItemAsync failed for key ${key}:`, e);
     }
-    return SecureStore.deleteItemAsync(key);
 }
