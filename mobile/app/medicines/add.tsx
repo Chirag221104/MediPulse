@@ -115,12 +115,12 @@ export default function AddMedicineScreen() {
     };
 
     const updateSlotRelation = (slotId: SlotId, mealKey: string, rel: 'before' | 'after') => {
-        const relation = `${rel}_${mealKey} ` as MealRelation;
+        const relation = `${rel}_${mealKey}` as MealRelation;
         setSlots(slots.map(s => s.timeOfDay === slotId ? { ...s, mealRelation: relation } : s));
     };
 
     const updateSlotQuantity = (slotId: SlotId, qty: string) => {
-        setSlots(slots.map(s => s.timeOfDay === slotId ? { ...s, quantity: qty } : s));
+        setSlots(slots.map(s => s.timeOfDay === slotId ? { ...s, quantity: qty || undefined } : s));
     };
 
     const handleSubmit = async () => {
